@@ -10,17 +10,32 @@ SLLM은 Smaller Large Language Model의 약자로 큰 언어 모델(Large Langua
 데이터셋은 AIHub, Kisti에서 제공한 데이터셋을 사용하며 Instruction Tuning을 위하여 SuperNI(https://github.com/allenai/natural-instructions) 에 정의된 Task를 참고하여 가능한 23개의 Task Dataset으로 Reformatting을 진행하였습니다. 데이터셋 공개의 제한이 있어 sample_data 폴더 안에 Task 별 예제 데이터를 업로드하였습니다. Initial Dataset은 AIHUB을 사용하였으며 GPT-4o를 이용하여 정의된 Task대로 데이터를 생성하였습니다. 학습에 사용한 데이터셋의 총 개수는 31,260개 입니다. 
 아래의 표는 각 Task에 대한 설명입니다.
 
-|Task Name|Description|
-|------|-------|
-|Summarization - bullet type|컨텍스트가 주어지면 컨텍스트 길이의 1/3 이상의 계층적 구조를 가진 요약 생성|
-|Summarization – sentence type|컨텍스트가 주어지면 컨텍스트 길이의 1/3 이상의 완전한 문장으로 요약 생성|
-|Title Generation|컨텍스트가 주어지면 컨텍스트를 대표하는 제목을 생성|
-|Abstractive QA Objective Explanation - bullet type|질문이 주어지면 객관식 문제의 형태로 보기, 정답, 정답에 대한 근거를 계층적 문장으로 생성|
-|Abstractive QA Objective Explanation - sentence type|질문이 주어지면 객관식 문제의 형태로 보기, 정답, 정답에 대한 근거를 완전한 문장으로 생성|
-|Abstractive QA Subjective - bullet type|질문이 주어지면 주관식 문제의 형태로 알맞은 정답을 계층적 문장으로 생성|
-|Abstractive QA Subjective - sentence type|질문이 주어지면 주관식 문제의 형태로 알맞은 정답을 완전한 문장으로 생성|
-|Abstractive QA Yes or No Explanation - bullet type|질문이 주어지면 예 또는 아니오로 정답을 생성하고 정답에 대한 근거를 계층적 문장으로 생성|
-|Abstractive QA Yes or No Explanation - sentence type|질문이 주어지면 예 또는 아니오로 정답을 생성하고 정답에 대한 근거를 완전한 문장으로 생성|
+|Task Name|Task IDX|Description|
+|------|-|-------|
+|Summarization - bullet type|task01_01|컨텍스트가 주어지면 컨텍스트 길이의 1/3 이상의 계층적 구조를 가진 요약 생성|
+|Summarization – sentence type|task01_02|컨텍스트가 주어지면 컨텍스트 길이의 1/3 이상의 완전한 문장으로 요약 생성|
+|Title Generation|task02|컨텍스트가 주어지면 컨텍스트를 대표하는 제목을 생성|
+|Abstractive QA Objective Explanation - bullet type|task03_01|질문이 주어지면 객관식 문제의 형태로 보기, 정답, 정답에 대한 근거를 계층적 문장으로 생성|
+|Abstractive QA Objective Explanation - sentence type|task03_02|질문이 주어지면 객관식 문제의 형태로 보기, 정답, 정답에 대한 근거를 완전한 문장으로 생성|
+|Abstractive QA Subjective - bullet type|task04_01|질문이 주어지면 주관식 문제의 형태로 알맞은 정답을 계층적 문장으로 생성|
+|Abstractive QA Subjective - sentence type|task04_02|질문이 주어지면 주관식 문제의 형태로 알맞은 정답을 완전한 문장으로 생성|
+|Abstractive QA Yes or No Explanation - bullet type|task05_01|질문이 주어지면 예 또는 아니오로 정답을 생성하고 정답에 대한 근거를 계층적 문장으로 생성|
+|Abstractive QA Yes or No Explanation - sentence type|task05_02|질문이 주어지면 예 또는 아니오로 정답을 생성하고 정답에 대한 근거를 완전한 문장으로 생성|
+|Extractive QA Objective Explanation - bullet type|task06_01|컨텍스트가 주어지면 컨텍스트의 내용의 범위에서 객관식 문제의 형태로 질문, 보기, 정답, 정답에 대한 근거를 계층적 문장으로 생성|
+|Extractive QA Objective Explanation - sentence type|task06_02|컨텍스트가 주어지면 컨텍스트의 내용의 범위에서 객관식 문제의 형태로 질문, 보기, 정답, 정답에 대한 근거를 완전한 문장으로 생성|
+|Extractive QA Yes or No Explanation - bullet type|task07_02|컨텍스트가 주어지면 컨텍스트의 내용의 범위에서 질문, 보기, 정답 (예 또는 아니오), 정답에 대한 근거를 계층적 문장으로 생성|
+|Extractive QA Yes or No Explanation - sentence type|task07_02|컨텍스트가 주어지면 컨텍스트의 내용의 범위에서 질문, 보기, 정답 (예 또는 아니오), 정답에 대한 근거를 완전한 문장으로 생성|
+|Extractive QA Subjective - bullet type|task08_01|컨텍스트가 주어지면 주관식 문제의 형태로 질문, 정답을 계층적 문장으로 생성|
+|Extractive QA Subjective - senrence type|task08_02|컨텍스트가 주어지면 주관식 문제의 형태로 질문, 정답을 완전한 문장으로 생성|
+|Text Completion|task09|미완성 형태의 컨텍스트가 주어지면 컨텍스트의 내용의 범위에서 나머지 부분을 생성|
+|Title2Contents Generation - bullet type|task10_01|짧은 제목이 주어지면 주어진 제목과 관련된 텍스트를 계층적 문장으로 생성|
+|Title2Contents Generation - sentence type|task10_02|짧은 제목이 주어지면 주어진 제목과 관련된 텍스트를 완전한 문장으로 생성|
+|Keyword Tagging|task11|컨텍스트가 주어지면 컨텍스트의 내용을 대표하는 다수의 핵심 키워드를 생성|
+|Table QA - bullet type|task12_01|HTML 형태의 표 컨텍스트가 주어지면 질문, 정답을 계층적 문장으로 생성|
+|Table QA - sentence type|task12_02|HTML 형태의 표 컨텍스트가 주어지면 질문, 정답을 완전한 문장으로 생성|
+|Paraphrasing - bullet type|task13_01|컨텍스트가 주어지면 컨텍스트의 내용의 의미가 왜곡되지 않게 다른 표현으로 계층적 문장 생성|
+|Paraphrasing - sentence type|task13_02|컨텍스트가 주어지면 컨텍스트의 내용의 의미가 왜곡되지 않게 다른 표현으로 완전한 문장 생성|
+
 
 
 # 4. Framework
