@@ -4,7 +4,7 @@ SLLM은 Smaller Large Language Model의 약자로 큰 언어 모델(Large Langua
 
 # 2. Update History
 - 2024.11.09 : LLaMA_3.1_8B 사전학습 가중치를 이용한 Instruction SFT 학습 완료 : Enkeeper/LLaMA3.1_TaskInstruct_LoRA_SFT
-- 2024.06.20 : LLaMA_3.1_8B 사전학습 가중치를 이용한 DPO 학습 완료 : Enkeeper/LLaMA3.1_TaskInstruct_LoRA_DPO
+- 2024.11.09 : LLaMA_3.1_8B 사전학습 가중치를 이용한 DPO 학습 완료 : Enkeeper/LLaMA3.1_TaskInstruct_LoRA_DPO
 
 # 3. Dataset
 데이터셋은 AIHub, Kisti에서 제공한 데이터셋을 사용하며 Instruction Tuning을 위하여 SuperNI(https://github.com/allenai/natural-instructions) 에 정의된 Task를 참고하여 가능한 23개의 Task Dataset으로 Reformatting을 진행하였습니다. 데이터셋 공개의 제한이 있어 sample_data 폴더 안에 Task 별 예제 데이터를 업로드하였습니다. Initial Dataset은 AIHUB을 사용하였으며 GPT-4o를 이용하여 정의된 Task대로 데이터를 생성하였습니다. 학습에 사용한 데이터셋의 총 개수는 31,260개 입니다. 
@@ -113,6 +113,9 @@ result = model.generate(**input_tokens,
 
 """
 ```
+
+자세한 내용은 inference.py를 참고해주세요.
+
 # 7. vLLM를 이용한 추론
 unsloth는 vLLM에서의 모델 추론을 위한 메서드를 지원합니다. 아래와 같은 코드를 이용하여 모델을 저장합니다.
 ```python
