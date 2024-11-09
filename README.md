@@ -41,15 +41,25 @@ SLLM은 Smaller Large Language Model의 약자로 큰 언어 모델(Large Langua
 # 4. Framework
 학습은 unsloth를 기반으로 수행됩니다. https://github.com/unslothai/unsloth 링크를 참고하여 unsloth 라이브러리를 설치하여주세요. 나머지 dependency는 requirements.txt를 참고하여 설치하여 주시기 바랍니다.
 
-# 4. Train
-먼저 config.json 파일을 만들어야 합니다. make_train_config.ipynb와 config 폴더 안에 있는 예시 config 파일을 참고하여 config 파일을 만들어주세요. 학습 구현은 unsloth 프레임워크 (https://github.com/unslothai/unsloth) 을 기반으로 합니다. unsloth는 LoRA fine-tuning에 대하여 빠른 학습 속도와 좋은 GPU 메모리 효율을 보여줍니다. 또한 다양한 Open Foundation 모델을 학습할 수 있습니다. 따라서 이 구현에서의 모든 모델은 LoRA Fine-Tuning을 수행합니다. 학습 또는 추론에 사용 할 특정 GPU의 선택을 원하지 않는 경우 코드에서 os.environ["CUDA_VISIBLE_DEVICES"]="1"를 주석처리 해주세요.
-- config 파일을 만들고 아래와 같은 명령어를 사용하여 LoRA Fine-Tuning을 수행합니다.
+# 5. Instruction Supervised Fine Tuning
+학습 구현은 unsloth 프레임워크 (https://github.com/unslothai/unsloth) 을 기반으로 합니다. unsloth는 LoRA fine-tuning에 대하여 빠른 학습 속도와 좋은 GPU 메모리 효율을 보여줍니다. 또한 다양한 Open Foundation 모델을 학습할 수 있습니다. 따라서 이 구현에서의 모든 모델은
+Unsloth를 이용한 LoRA Fine-Tuning을 수행합니다.
+
+- 아래와 같은 명령어를 사용하여 Supervised Fine Tuning을 수행합니다. args에 대한 자세한 내용은 train_LoRA_SFT.py를 참고해주세요.
 ```python
-$ python train_LoRA.py --config_path /path/your/config_path
+$ python train_LoRA_SFT.py --[args]
+```
+
+# 6. Directly Preference Optimization
+DPO 역시 unsloth 프레임워크 (https://github.com/unslothai/unsloth) 을 기반으로 합니다.
+
+- 아래와 같은 명령어를 사용하여 Directly Preference Optimization을 수행합니다. args에 대한 자세한 내용은 train_LoRA_DPO.py를 참고해주세요.
+```python
+$ python train_LoRA_DPO.py --[args]
 ```
 
 # 5. Inference
-LoRA Fine-Tuning이 완료된 모델은 추론을 수행할 수 있습니다. 학습이 완료된 후 저장된 weight의 폴더 또는 huggingface에 업로드된 모델을 로드할 수 있습니다. 자세한 내용은 inference.ipynb 파일을 참고하여주세요. 추론에 대한 샘플 코드 및 추론 결과는 아래와 같습니다.
+LoRA Fine-Tuning이 완료된 모델은 추론을 수행할 수 있습니다. 학습이 완료된 후 저장된 weight의 폴더 또는 huggingface에 업로드된 모델을 로드할 수 있습니다. 자세한 내용은 inference.py를 참고해주세요. llama3.1 추론에 대한 샘플 코드 및 추론 결과는 아래와 같습니다.
 ```python
 from unsloth import FastLanguageModel
 
@@ -64,48 +74,56 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 system_prompt = """당신은 경영 컨설턴트 비서 인공지능입니다. 친절하게 설명해주세요. 답이 어렵다면 단계별로 설명해주세요.\n\n"""
 instruction = "ESG 경영이란 무엇인가?"
 
-input_text = preprocess_text(system_prompt + instruction)
-input_tokens = tokenizer(input_text, return_tensors='pt', return_token_type_ids=False)
+system_content = """질문에 대한 올바른 답변을 상세하고 면밀하게 작성해 주세요. 아래와 같은 규칙을 지켜주세요.
+1. 답변은 심층적 분석을 포함하며, 전문적인 어조를 사용해야합니다.
+2. 답변은 질문에 대한 깊이 있는 설명과 예시를 제공해야 합니다.
+3. 답변은 bullet points를 사용해 독자가 쉽게 이해할 수 있는 명확한 계층 구조를 갖춰야 합니다. 
+4. 모든 답변은 Markdown format으로 작성되어야 하며, 명시적으로 ```markdown ```을 사용하지 않도록 주의해서 작성하세요."""
+user_content = '###Question###:\n양자 컴퓨팅이란 무엇인가?\n\n###Answer###:'
+
+input_message = make_chat_dict(system_content, user_content)
+input_message = tokenizer.apply_chat_template(input_message, tokenize=False, add_generation_prompt=True)
+input_tokens = tokenizer(input_message, return_tensors='pt', return_token_type_ids=False)
 
 result = model.generate(**input_tokens,
-                        max_new_tokens=1024, early_stopping=True, do_sample=False, eos_token_id=2, pad_token_id=2, temperature=0.7,
-                        streamer=streamer)
+                        max_new_tokens=4096, early_stopping=True, do_sample=False, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id, 
+                        temperature=0.3, streamer=streamer)
 
 """
-ESG 경영은 기업이 환경, 사회, 지배 구조에 대한 영향력을 고려하여 경영하는 접근 방식입니다. 이는 기업이 사회적 책임을 다하고 지속 가능한 비즈니스 모델을 구축하는 것을 강조합니다. 
+**개요 및 정의**
 
-"E"는 환경을 의미하며, 기업이 환경에 미치는 영향을 고려하고 친환경 방식으로 운영하는 것을 의미합니다. 이는 기업이 탄소 배출을 줄이고 재활용을 촉진하며 지속 가능한 에너지 소스를 사용하는 등의 방법으로 환경에 대한 영향을 최소화하는 것을 의미합니다.
-"S"는 사회를 의미하며, 기업이 사회에 미치는 영향을 고려하고 사회적 책임을 다하는 것을 의미합니다. 이는 기업이 다양성과 포용성을 증진하고 공정한 노동 조건을 제공하며 지역 사회에 기여하는 등의 방법으로 사회에 긍정적인 영향을 미치는 것을 의미합니다.
-"G"는 지배 구조를 의미하며, 기업이 지배 구조에 대한 영향력을 고려하고 투명하고 윤리적인 방식으로 운영하는 것을 의미합니다. 이는 기업이 독립적인 이사회를 구성하고 공정한 거래를 하며 공정한 보상 체계를 구축하는 등의 방법으로 지배 구조에 대한 영향력을 최소화하는 것을 의미합니다.
+- 양자 컴퓨팅은 기존 전통적인 컴퓨팅 방식과는 다른 새로운 기술 분야입니다.
+- 이 기술은 양자역학의 원리를 활용하여 정보 처리 및 계산 능력을 극대화하려는 목표를 가지고 있습니다.
+- 양자 컴퓨팅의 핵심은 양자 비트(qubit)를 사용하는 것입니다.
 
-ESG 경영은 기업이 사회적 책임을 다하고 지속 가능한 비즈니스 모델을 구축하는 것을 강조하는 접근 방식입니다. 이는 기업이 환경, 사회, 지배 구조에 대한 영향력을 고려하여 경영하는 것을 의미합니다.$&%</s>
+**양자 비트(qubit)의 특징**
+
+- 기존 비트는 두 가지 상태(0과 1)만을 가질 수 있지만, qubit은 여러 상태를 동시에 유지할 수 있습니다.
+- 이로 인해 양자 컴퓨팅에서는 여러 가능한 해를 동시에 탐색할 수 있습니다.
+- 이러한 특성은 특히 복잡한 문제 해결에 유리하게 작용합니다.
+
+**양자 컴퓨팅의 주요 이점**
+
+- **고속 계산 능력**: 
+  - 양자 컴퓨팅은 특정 문제에서 기존 컴퓨터보다 훨씬 빠른 계산을 가능하게 합니다.
+  - 특히, 대규모 데이터 셋 및 복잡한 수학적 연산에 유리합니다.
+
+...
+...
+
 """
 ```
-# 6. vLLM를 이용한 추론
+# 7. vLLM를 이용한 추론
 unsloth는 vLLM에서의 모델 추론을 위한 메서드를 지원합니다. 아래와 같은 코드를 이용하여 모델을 저장합니다.
 ```python
-model.save_pretrained_merged('folder_path', tokenizer, save_method="merged_16bit")
+model.save_pretrained_merged('weights_directory_path', tokenizer, save_method="merged_16bit")
 ```
 위 코드는 lora_adapter와 모델을 통합하여 저장한 후 vLLM에서 추론할 수 있게 해줍니다. lora adapter만 저장을 원하는 경우 아래와 같은 코드를 사용해주세요.
 ```python
-model.save_pretrained_merged('folder_path', tokenizer, save_method="lora")
+model.save_pretrained_merged('weights_directory_path', tokenizer, save_method="lora")
 ```
-보다 자세한 내용은 inference.ipynb와 vLLM_offline_inference.ipynb 파일을 참고해주세요
 
-# 7. Zero-Shot Performance
-### Zero-Shot이란?
-Zero-Shot은 쉽게 말하면 "모델이 학습 과정에서 배우지 않은 작업을 수행하는 것"을 의미합니다. sLLM 기반의 Instruction Tuned 모델은 학습 과정에서 배우지 않는 태스크에 대한 설명을 제공하면 태스크를 자연어를 통해 이해하여 Zero-Shot Inference 일정 수준 충족할 수 있습니다.
-### Evaluation Dataset
-모델의 Zero-Shot 능력을 정량적으로 평가하기 위해 분류 태스크를 활용합니다. 4개의 데이터셋을 사용하여 평가를 진행하며 이 데이터셋은 학습 과정에서 전혀 사용하지 않은 데이터셋입니다. 각 모델별 데이터셋에 대한 F1-Score로 모델 성능을 비교합니다.
-Zero-Shot Dataset의 설명은 아래와 같습니다.
-- KorNLI : 한국어로 구성된 Natural Language Inference 태스크로써 클래스는 entailment, neutral, contradiction으로 표시됩니다. (https://github.com/kakaobrain/kor-nlu-datasets)
-- KorQuestionPair : 한국어로 구성된 두 개의 문장에 대하여 유사성을 평가하는 태스크로써 클래스는 두 문장이 같을 경우 0, 같지 않을 경우 1로 표시됩니다. (https://github.com/songys/Question_pair)
-- KoreaHateSpeech : 한국어로 구성된 사회적 편견 및 혐오 표현을 탐지하는 태스크로써 여기서는 사회적 편견의 유무에 대한 태스크를 수행합니다. 사회적 편견이 있는 경우 1, 없는 경우 0으로 표시됩니다. (https://github.com/songys/Question_pair)
-- NSMC : 한국어로 구성된 영화 리뷰 데이터셋이며 긍정, 부정의 레이블이 존재합니다. (https://github.com/e9t/nsmc)
+vLLM을 이용한 offline inference에 대한 예제는 https://docs.vllm.ai/en/v0.5.5/getting_started/examples/offline_inference.html 를 참고해주세요.
 
-모델에게 태스크 이해를 위한 시스템 프롬프트는 최소한으로 입력하여 각 모델별, 데이터셋별 Average F1-Score를 산출합니다. 성능은 아래와 같습니다.
-|모델|KorNLI|KorQuestionPair|KoreaHateSpeech|NSMC|
-|------|---|---|---|---|
-|SOLAR 10.7B TaskInstruct|0.44|0.68|0.63|0.76|
-|Mistral 7B TaskInstruct|0.31|0.51|0.41|0.77|
-|Gemma 2B TaskInstruct|0.30|0.45|0.49|0.65|
+# 8. Custom 모델 기반의 챗봇 구축
+별도 저장소에 구현 예정
