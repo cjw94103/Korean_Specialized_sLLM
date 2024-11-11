@@ -19,6 +19,7 @@ parser.add_argument("--max_seq_length", type=int, help="Choose according to your
 parser.add_argument("--dtype", type=int, help="dtype of None is auto detecting", default=None)
 parser.add_argument("--load_in_4bit", action='store_false', help="Whether to load in 4 bits, True recommended")
 parser.add_argument("--model_id", type=str, help="pretrained model id or local path", default="Enkeeper/LLaMA3.1_TaskInstruct_LoRA_DPO")
+parser.add_argument("--model_name", type=str, help="pretrained model name for chat template, llama31, solar etc", default="llama31")
 parser.add_argument("--save_16bit_path", type=str, help="save merged 16 bit weights for vLLM", default="./weights")
 
 ## 필요 함수
