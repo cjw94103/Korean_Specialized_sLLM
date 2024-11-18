@@ -13,3 +13,4 @@ datasets==2.18.0
 huggingface-hub==0.22.1
 pillow==10.2.0
 tokenizers==0.15.2
+vllm==0.5.3
